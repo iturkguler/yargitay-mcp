@@ -16,6 +16,7 @@ from __future__ import annotations
 import html
 import logging
 import re
+import os
 from typing import Optional
 
 import httpx
@@ -34,7 +35,15 @@ class YargitayClient:
     ARAMA_UCU = "/aramadetaylist"
     BELGE_UCU = "/getDokuman"
 
-    def __init__(self, timeout: float = 60.0, verify_tls: bool = True):
+    def __init__(self, timeout: float = 60.0, verify_tls: bool = True,
+                 proxy: Optional[str] = None):
+        # Türkiye çıkışlı proxy. Ayarlanırsa tüm istekler buradan geçer.
+        # Horizon'da YARGITAY_PROXY env değişkeni ile verilir:
+        #   http://kullanici:parola@host:port   veya   http://host:port
+        proxy = proxy or os.getenv("YARGITAY_PROXY") or None
+        if proxy:
+            logger.info("Proxy üzerinden bağlanılacak: %s", proxy.split("@")[-1])
+
         self._http = httpx.AsyncClient(
             base_url=self.BASE_URL,
             headers={
@@ -50,6 +59,7 @@ class YargitayClient:
             },
             timeout=timeout,
             verify=verify_tls,
+            proxy=proxy,
         )
 
     # ------------------------------------------------------------------ arama
